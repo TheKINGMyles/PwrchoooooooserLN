@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Power Awakening</title>
+    <style>
+        :root {
+            --primary: #ff4d4d;
+            --bg: #0f0f0f;
+            --card: #1e1e1e;
+            --accent: #00ff88;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; padding: 40px 20px; }
+        .container { max-width: 600px; margin: auto; }
+        .wheel-container { display: flex; justify-content: center; gap: 15px; margin: 40px 0; flex-wrap: wrap; }
+        
+        .wheel {
+            width: 145px; height: 160px; background: var(--card); border: 3px solid #333;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 15px; font-size: 0.85rem; text-transform: uppercase; overflow: hidden;
+            position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .wheel.spinning { 
+            border-color: var(--primary);
+            color: #ffaaaa;
+            filter: blur(0.5px);
+            animation: pulse 0.1s infinite;
+        }
+
+        .wheel.locked { opacity: 0.4; cursor: not-allowed; border-color: #551a1a; filter: grayscale(1); }
+        .wheel.selected { border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); background: #143326; }
+
+        #status { height: 24px; color: #888; margin-bottom: 20px; font-style: italic; font-size: 0.9rem; }
+        
+        .btn {
+            background: var(--primary); color: white; border: none; padding: 15px 40px;
+            border-radius: 50px; font-weight: bold; cursor: pointer; display: none;
+            transition: transform 0.2s; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
+        }
+        .btn:hover { transform: scale(1.05); background: #ff3333; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>The Power Awakening</h1>
+        <div id="status">Tap the first box to begin the ritual...</div>
+
+        <div class="wheel-container">
+            <div id="wheel1" class="wheel" onclick="spin(1)">SPIN 1</div>
+            <div id="wheel2" class="wheel" onclick="spin(2)" style="display:none">SPIN 2</div>
+            <div id="wheel3" class="wheel" onclick="spin(3)" style="display:none">SPIN 3</div>
+        </div>
+
+        <button id="submit-btn" class="btn" onclick="submitToAdmin()">Claim My Powers</button>
+    </div>
+
+    <script>
+        // ANTI-CHEAT
+        if (localStorage.getItem('powers_claimed')) {
+            document.body.innerHTML = "<h1>ACCESS DENIED</h1><p>Your fate is already sealed.</p>";
+            setTimeout(() => { window.location.href = "https://google.com"; }, 3000);
+        }
+
+        const powersList = [
+            "Speed", "Strength", "Bursts", "Invisibility", "Heat Vision", "Blasters", 
+            "Overpowered Lasers (nerf)", "Black Flashes (nerf)", "Infinity (nerf)", "Construction", 
+            "Six Eyes (nerf)", "Sukuna’s Technique (nerf)", "Teleportation (nerf)", "Time Stop (nerf)", 
+            "Gravity Control (nerf)", "Intangibility", "Molecular Combustion (nerf)", "Shadow Mimicry", 
+            "Energy Absorption (nerf)", "Reality Warp (nerf)", "Force Field", "Elemental Manipulation", 
+            "Necromancy (nerf)", "Mind Control (nerf)", "Phasing", "Future Sight (nerf)", "Cloning (nerf)", 
+            "Size Alteration", "Vector Control (nerf)", "Soul Reap (nerf)", "Absolute Zero (nerf)", "Supernova (nerf)"
+        ];
+
+        let results = [];
+        let chosenIndices = [];
+
+        function spin(num) {
+            const el = document.getElementById(`wheel${num}`);
+            el.classList.add('spinning');
+            el.onclick = null;
+            document.getElementById('status').innerText = "Rerolling fate...";
+
+            let spinCount = 0;
+            const spinInterval = setInterval(() => {
+                el.innerText = powersList[Math.floor(Math.random() * powersList.length)];
+                spinCount++;
+            }, 70);
+
+            setTimeout(() => {
+                clearInterval(spinInterval);
+                el.classList.remove('spinning');
+                const finalPower = powersList[Math.floor(Math.random() * powersList.length)];
+                el.innerText = finalPower;
+                results.push(finalPower);
+
+                if (num < 3) {
+                    const next = document.getElementById(`wheel${num + 1}`);
+                    next.style.display = 'flex';
+                    document.getElementById('status').innerText = `You pulled ${finalPower}. Spin next.`;
+                } else {
+                    prepareSelection();
+                }
+            }, 2000);
+        }
+
+        function prepareSelection() {
+            document.getElementById('status').innerText = "Select 2 to keep. The 3rd wheel is permanently locked.";
+            document.getElementById('wheel3').classList.add('locked');
+            
+            forEach(id => {
+                const el = document.getElementById(`wheel${id}`);
+                el.onclick = () => toggleChoice(id);
+            });
+        }
+
+        function toggleChoice(id) {
+            const el = document.getElementById(`wheel${id}`);
+            const index = id - 1;
+
+            if (chosenIndices.includes(index)) {
+                chosenIndices = chosenIndices.filter(i => i !== index);
+                el.classList.remove('selected');
+            } else if (chosenIndices.length < 2) {
+                chosenIndices.push(index);
+                el.classList.add('selected');
+            }
+
+            document.getElementById('submit-btn').style.display = (chosenIndices.length === 2) ? 'inline-block' : 'none';
+        }
+
+        async function submitToAdmin() {
+            const btn = document.getElementById('submit-btn');
+            btn.innerText = "Transmitting Selection...";
+            btn.disabled = true;
+
+            const selection = chosenIndices.map(i => results[i]);
+
+            try {
+                const response = await fetch('https://formspree.io', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        Chosen_Powers: selection.join(", "),
+                        Discarded_Power: results
+                    })
+                });
+
+                if (response.ok) {
+                    localStorage.setItem('powers_claimed', 'true');
+                    alert("Powers Registered. System shutting down.");
+                    window.location.href = "https://google.com";
+                } else {
+                    alert("Submission failed. Check connection.");
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Network error.");
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
