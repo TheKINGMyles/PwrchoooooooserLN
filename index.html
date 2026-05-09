@@ -5,135 +5,313 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Power Awakening</title>
     <style>
-        :root { --primary: #ff4d4d; --bg: #0f0f0f; --card: #1e1e1e; --accent: #00ff88; }
+        :root { 
+            --primary: #ff4d4d; --bg: #0f0f0f; --card: #1e1e1e; --accent: #00ff88; 
+            --common: #b3b3b3; --rare: #0070dd; --epic: #a335ee; --legendary: #ff8000; --secret: #ff007f;
+        }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; padding: 40px 20px; }
-        .container { max-width: 600px; margin: auto; }
-        .wheel-container { display: flex; justify-content: center; gap: 15px; margin: 40px 0; flex-wrap: wrap; }
+        .container { max-width: 1200px; margin: auto; }
+        
+        .header-controls { position: sticky; top: 0; background: rgba(15,15,15,0.95); padding: 15px; z-index: 100; border-radius: 8px; backdrop-filter: blur(5px); box-shadow: 0 4px 20px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        #status { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; color: #fff; }
+        
+        #searchBar { width: 100%; max-width: 400px; padding: 12px 20px; background: #222; border: 2px solid #444; border-radius: 25px; color: white; font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; }
+        #searchBar:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+
+        .wheel-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin: 20px 0; }
+        
         .wheel {
-            width: 145px; height: 160px; background: var(--card); border: 3px solid #333;
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            font-weight: 800; cursor: pointer; transition: all 0.3s;
-            padding: 15px; font-size: 0.85rem; text-transform: uppercase; overflow: hidden;
-            position: relative; z-index: 10;
+            height: 210px; background: var(--card); border: 3px solid #333;
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center; 
+            justify-content: space-between; font-weight: 800; cursor: pointer; transition: all 0.2s;
+            padding: 15px; font-size: 0.85rem; text-transform: uppercase; box-sizing: border-box;
         }
-        .wheel.spinning { border-color: var(--primary); animation: pulse 0.1s infinite; filter: blur(0.5px); }
-        .wheel.locked { opacity: 0.3; cursor: not-allowed; border-color: #551a1a; filter: grayscale(1); z-index: 1; }
-        .wheel.selected { border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); background: #143326; transform: scale(1.05); }
-        #status { height: 30px; color: #888; margin-bottom: 20px; font-style: italic; }
+        .wheel:hover:not(.locked) { border-color: #666; transform: translateY(-3px); }
+        .wheel.selected { border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); background: #143326; }
+        .wheel.locked { opacity: 0.25; cursor: not-allowed; border-color: #444; filter: grayscale(1); pointer-events: none; }
+
+        .power-name { font-size: 0.85rem; margin-bottom: 5px; color: #fff; width: 100%; word-wrap: break-word; }
+        .power-desc { font-size: 0.65rem; color: #aaa; text-transform: none; font-weight: 400; text-align: center; flex-grow: 1; margin-top: 5px; overflow: hidden; }
+        .locked-tag { color: var(--primary); font-size: 0.65rem; font-weight: bold; }
+
+        .rarity { font-size: 0.6rem; padding: 2px 8px; border-radius: 4px; margin-top: 10px; letter-spacing: 1px; width: fit-content; }
+        .common { color: var(--common); border: 1px solid var(--common); }
+        .rare { color: var(--rare); border: 1px solid var(--rare); }
+        .epic { color: var(--epic); border: 1px solid var(--epic); }
+        .legendary { color: var(--legendary); border: 1px solid var(--legendary); }
+        .secret { color: var(--secret); border: 1px solid var(--secret); animation: pulse 1.5s infinite; }
+
+        .btn-group { display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
         .btn {
-            background: var(--primary); color: white; border: none; padding: 15px 40px;
-            border-radius: 50px; font-weight: bold; cursor: pointer; display: none;
-            font-size: 1.1rem; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
+            background: var(--accent); color: #000; border: none; padding: 15px 40px;
+            border-radius: 50px; font-weight: bold; cursor: pointer; display: inline-block;
+            font-size: 1.1rem; text-transform: uppercase; transition: all 0.2s; opacity: 0.3; pointer-events: none;
         }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+        .btn.sms-btn { background: #0088cc; color: white; }
+        .btn.active { opacity: 1; pointer-events: auto; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
+        .btn.sms-btn.active { box-shadow: 0 0 20px rgba(0, 136, 204, 0.4); }
+        
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>The Power Awakening</h1>
-        <div id="status">Tap the first box to begin...</div>
-        <div class="wheel-container">
-            <div id="wheel1" class="wheel" onclick="spin(1)">SPIN 1</div>
-            <div id="wheel2" class="wheel" onclick="spin(2)" style="display:none">SPIN 2</div>
-            <div id="wheel3" class="wheel" onclick="spin(3)" style="display:none">SPIN 3</div>
-        </div>
-        <button id="submit-btn" class="btn" onclick="submitToAdmin()">Confirm Choices</button>
+<div class="container">
+    <h1>The Power Awakening</h1>
+    
+    <div class="header-controls">
+        <div id="status">Select exactly 3 powers to unlock your destiny</div>
+        <input type="text" id="searchBar" placeholder="Search powers..." oninput="filterPowers()">
     </div>
 
-    <script>
-        // Check play status immediately
-        if (localStorage.getItem('powers_claimed_v2')) {
-            document.body.innerHTML = "<h1>ALREADY CLAIMED</h1><p>You cannot change your fate.</p>";
-            setTimeout(() => { window.location.href = "https://google.com"; }, 2000);
-        }
+    <div class="wheel-container" id="powersGrid">
+        <!-- Initial Base Powers -->
+        <div class="wheel" data-name="super strength" onclick="togglePower(this, 'Super Strength')">
+            <div class="power-name">Super Strength</div><div class="power-desc">Physical power capable of shattering boulders easily.</div><div class="rarity common">Common</div>
+        </div>
+        <div class="wheel" data-name="flight" onclick="togglePower(this, 'Flight')">
+            <div class="power-name">Flight</div><div class="power-desc">Defy gravity and soar through the skies freely.</div><div class="rarity common">Common</div>
+        </div>
+        <div class="wheel" data-name="night vision" onclick="togglePower(this, 'Night Vision')">
+            <div class="power-name">Night Vision</div><div class="power-desc">See clearly through complete darkness.</div><div class="rarity common">Common</div>
+        </div>
+        <div class="wheel" data-name="aquatic breath" onclick="togglePower(this, 'Aquatic Breath')">
+            <div class="power-name">Aquatic Breath</div><div class="power-desc">Breathe underwater without any breathing gear.</div><div class="rarity common">Common</div>
+        </div>
+        <div class="wheel" data-name="wall crawling" onclick="togglePower(this, 'Wall Crawling')">
+            <div class="power-name">Wall Crawling</div><div class="power-desc">Adhere to surfaces and scale buildings vertically.</div><div class="rarity common">Common</div>
+        </div>
+        <div class="wheel" data-name="enhanced reflex" onclick="togglePower(this, 'Enhanced Reflex')">
+            <div class="power-name">Enhanced Reflex</div><div class="power-desc">React to incoming objects with minimal delay.</div><div class="rarity common">Common</div>
+        </div>
+        <div class="wheel" data-name="thermal sight" onclick="togglePower(this, 'Thermal Sight')">
+            <div class="power-name">Thermal Sight</div><div class="power-desc">Track living creatures via structural heat signatures.</div><div class="rarity common">Common</div>
+        </div>
+        <div class="wheel" data-name="telescopic eye" onclick="togglePower(this, 'Telescopic Eye')">
+            <div class="power-name">Telescopic Eye</div><div class="power-desc">Zoom your eyesight into distant landscapes safely.</div><div class="rarity common">Common</div>
+        </div>
+        <div class="wheel" data-name="iron skin" onclick="togglePower(this, 'Iron Skin')">
+            <div class="power-name">Iron Skin</div><div class="power-desc">Harden your outer flesh layer against minor strikes.</div><div class="rarity common">Common</div>
+        </div>
+        <div class="wheel" data-name="sonic whistle" onclick="togglePower(this, 'Sonic Whistle')">
+            <div class="power-name">Sonic Whistle</div><div class="power-desc">Emit high-pitched sound waves to disrupt targets.</div><div class="rarity common">Common</div>
+        </div>
 
-        const powersList = [
-            "Speed", "Strength", "Bursts", "Invisibility", "Heat Vision", "Blasters", 
-            "Overpowered Lasers (nerf)", "Black Flashes (nerf)", "Infinity (nerf)", "Construction", 
-            "Six Eyes (nerf)", "Sukuna’s Technique (nerf)", "Teleportation (nerf)", "Time Stop (nerf)", 
-            "Gravity Control (nerf)", "Intangibility", "Molecular Combustion (nerf)", "Shadow Mimicry", 
-            "Energy Absorption (nerf)", "Reality Warp (nerf)", "Force Field", "Elemental Manipulation", 
-            "Necromancy (nerf)", "Mind Control (nerf)", "Phasing", "Future Sight (nerf)", "Cloning (nerf)", 
-            "Size Alteration", "Vector Control (nerf)", "Soul Reap (nerf)", "Absolute Zero (nerf)", "Supernova (nerf)"
-        ];
+        <div class="wheel" data-name="invisibility" onclick="togglePower(this, 'Invisibility')">
+            <div class="power-name">Invisibility</div><div class="power-desc">Vanish from the naked eye completely at will.</div><div class="rarity rare">Rare</div>
+        </div>
+        <div class="wheel" data-name="pyrokinesis" onclick="togglePower(this, 'Pyrokinesis')">
+            <div class="power-name">Pyrokinesis</div><div class="power-desc">Conjure and manipulate intense roaring flames.</div><div class="rarity rare">Rare</div>
+        </div>
+        <div class="wheel" data-name="cryokinesis" onclick="togglePower(this, 'Cryokinesis')">
+            <div class="power-name">Cryokinesis</div><div class="power-desc">Freeze moisture around you into sharp icicles.</div><div class="rarity rare">Rare</div>
+        </div>
+        <div class="wheel" data-name="telekinesis" onclick="togglePower(this, 'Telekinesis')">
+            <div class="power-name">Telekinesis</div><div class="power-desc">Lift and move heavy objects with mental focus.</div><div class="rarity rare">Rare</div>
+        </div>
+        <div class="wheel" data-name="electro-dash" onclick="togglePower(this, 'Electro-Dash')">
+            <div class="power-name">Electro-Dash</div><div class="power-desc">Move in short bursts encased in lightning static.</div><div class="rarity rare">Rare</div>
+        </div>
+        <div class="wheel" data-name="earth shaker" onclick="togglePower(this, 'Earth Shaker')">
+            <div class="power-name">Earth Shaker</div><div class="power-desc">Stomp to crack solid terrain near your location.</div><div class="rarity rare">Rare</div>
+        </div>
+        <div class="wheel" data-name="shadow camo" onclick="togglePower(this, 'Shadow Camo')">
+            <div class="power-name">Shadow Camo</div><div class="power-desc">Blend perfectly into any dark corner or recess.</div><div class="rarity rare">Rare</div>
+        </div>
+        <div class="wheel" data-name="wind burst" onclick="togglePower(this, 'Wind Burst')">
+            <div class="power-name">Wind Burst</div><div class="power-desc">Release pressurized air drafts to push enemies backward.</div><div class="rarity rare">Rare</div>
+        </div>
+        <div class="wheel" data-name="acid spit" onclick="togglePower(this, 'Acid Spit')">
+            <div class="power-name">Acid Spit</div><div class="power-desc">Launch corrosive liquid projectiles at target spots.</div><div class="rarity rare">Rare</div>
+        </div>
+        <div class="wheel" data-name="mind link" onclick="togglePower(this, 'Mind Link')">
+            <div class="power-name">Mind Link</div><div class="power-desc">Establish silent mental communication channels with allies.</div><div class="rarity rare">Rare</div>
+        </div>
 
-        let results = [];
-        let chosenIndices = [];
+        <!-- LOCKED SCROLL WHEEL -->
+        <div class="wheel locked" data-name="scroll wheel">
+            <div class="power-name">Scroll Wheel</div><div class="power-desc">???</div><div class="rarity secret">???</div><div class="locked-tag">Taken by Myles</div>
+        </div>
 
-        function spin(num) {
-            const el = document.getElementById(`wheel${num}`);
-            el.classList.add('spinning');
-            el.onclick = null;
-            document.getElementById('status').innerText = "Rerolling fate...";
+        <div class="wheel" data-name="teleportation" onclick="togglePower(this, 'Teleportation')">
+            <div class="power-name">Teleportation</div><div class="power-desc">Blink through space to any visible target area.</div><div class="rarity epic">Epic</div>
+        </div>
+        <div class="wheel" data-name="chronos shift" onclick="togglePower(this, 'Chronos Shift')">
+            <div class="power-name">Chronos Shift</div><div class="power-desc">Rewind personal time back exactly five seconds.</div><div class="rarity epic">Epic</div>
+        </div>
+        <div class="wheel" data-name="force field" onclick="togglePower(this, 'Force Field')">
+            <div class="power-name">Force Field</div><div class="power-desc">Project energy barriers that stop kinetic items.</div><div class="rarity epic">Epic</div>
+        </div>
+        <div class="wheel" data-name="magnetism" onclick="togglePower(this, 'Magnetism')">
+            <div class="power-name">Magnetism</div><div class="power-desc">Control metallic pieces across long distances.</div><div class="rarity epic">Epic</div>
+        </div>
+        <div class="wheel" data-name="phase walk" onclick="togglePower(this, 'Phase Walk')">
+            <div class="power-name">Phase Walk</div><div class="power-desc">Slip molecular structure directly through solid walls.</div><div class="rarity epic">Epic</div>
+        </div>
+        <div class="wheel" data-name="plague swarm" onclick="togglePower(this, 'Plague Swarm')">
+            <div class="power-name">Plague Swarm</div><div class="power-desc">Summon venomous locust fields to drain targets.</div><div class="rarity epic">Epic</div>
+        </div>
+        <div class="wheel" data-name="sound null" onclick="togglePower(this, 'Sound Null')">
+            <div class="power-name">Sound Null</div><div class="power-desc">Erase sound emissions inside a fixed boundary zone.</div><div class="rarity epic">Epic</div>
+        </div>
+        <div class="wheel" data-name="laser vision" onclick="togglePower(this, 'Laser Vision')">
+            <div class="power-name">Laser Vision</div><div class="power-desc">Fire burning energy beams from your eyes continuously.</div><div class="rarity epic">Epic</div>
+        </div>
+        <div class="wheel" data-name="gravity well" onclick="togglePower(this, 'Gravity Well')">
+            <div class="power-name">Gravity Well</div><div class="power-desc">Heavy up local weight forces to trap targets down.</div><div class="rarity epic">Epic</div>
+        </div>
+        <div class="wheel" data-name="heal aura" onclick="togglePower(this, 'Heal Aura')">
+            <div class="power-name">Heal Aura</div><div class="power-desc">Mend minor wounds on your squad over brief periods.</div><div class="rarity epic">Epic</div>
+        </div>
 
-            let spinInterval = setInterval(() => {
-                el.innerText = powersList[Math.floor(Math.random() * powersList.length)];
-            }, 70);
+        <div class="wheel" data-name="void mimic" onclick="togglePower(this, 'Void Mimic')">
+            <div class="power-name">Void Mimic</div><div class="power-desc">Absorb and replicate any active enemy attributes.</div><div class="rarity legendary">Legendary</div>
+        </div>
+        <div class="wheel" data-name="reality warp" onclick="togglePower(this, 'Reality Warp')">
+            <div class="power-name">Reality Warp</div><div class="power-desc">Alter the fundamental laws of physics locally.</div><div class="rarity legendary">Legendary</div>
+        </div>
+        <div class="wheel" data-name="starfall" onclick="togglePower(this, 'Starfall')">
+            <div class="power-name">Starfall</div><div class="power-desc">Call down heated meteorite impacts from orbit.</div><div class="rarity legendary">Legendary</div>
+        </div>
+        <div class="wheel" data-name="time halt" onclick="togglePower(this, 'Time Halt')">
+            <div class="power-name">Time Halt</div><div class="power-desc">Freeze external global motion completely for 3 seconds.</div><div class="rarity legendary">Legendary</div>
+        </div>
+        <div class="wheel" data-name="dragon form" onclick="togglePower(this, 'Dragon Form')">
+            <div class="power-name">Dragon Form</div><div class="power-desc">Shape-shift into a giant winged, armored reptile.</div><div class="rarity legendary">Legendary</div>
+        </div>
+        <div class="wheel" data-name="absolute zero" onclick="togglePower(this, 'Absolute Zero')">
+            <div class="power-name">Absolute Zero</div><div class="power-desc">Stop atomic movement inside an area instantly.</div><div class="rarity legendary">Legendary</div>
+        </div>
+        <div class="wheel" data-name="necromancy" onclick="togglePower(this, 'Necromancy')">
+            <div class="power-name">Necromancy</div><div class="power-desc">Reanimate fallen entities to serve your command.</div><div class="rarity legendary">Legendary</div>
+        </div>
+        <div class="wheel" data-name="solar flare" onclick="togglePower(this, 'Solar Flare')">
+            <div class="power-name">Solar Flare</div><div class="power-desc">Unleash blinding nuclear light waves from within.</div><div class="rarity legendary">Legendary</div>
+        </div>
+        <div class="wheel" data-name="dark matter" onclick="togglePower(this, 'Dark Matter')">
+            <div class="power-name">Dark Matter</div><div class="power-desc">Generate black holes that suck in matter.</div><div class="rarity legendary">Legendary</div>
+        </div>
+        <div class="wheel" data-name="soul reaper" onclick="togglePower(this, 'Soul Reaper')">
+            <div class="power-name">Soul Reaper</div><div class="power-desc">Sever vital essence values away from enemy units.</div><div class="rarity legendary">Legendary</div>
+        </div>
 
-            setTimeout(() => {
-                clearInterval(spinInterval);
-                el.classList.remove('spinning');
-                const finalPower = powersList[Math.floor(Math.random() * powersList.length)];
-                el.innerText = finalPower;
-                results.push(finalPower);
+        <div class="wheel" data-name="glitch code" onclick="togglePower(this, 'Glitch Code')">
+            <div class="power-name">Glitch Code</div><div class="power-desc">Corrupt reality vectors to bypass system parameters completely.</div><div class="rarity secret">Secret</div>
+        </div>
+        <div class="wheel" data-name="infinity core" onclick="togglePower(this, 'Infinity Core')">
+            <div class="power-name">Infinity Core</div><div class="power-desc">Access unlimited energetic source streams inside yourself.</div><div class="rarity secret">Secret</div>
+        </div>
+    </div>
 
-                if (num < 3) {
-                    const next = document.getElementById(`wheel${num + 1}`);
-                    next.style.display = 'flex';
-                    document.getElementById('status').innerText = `You pulled ${finalPower}. Spin next.`;
-                } else {
-                    prepareSelection();
-                }
-            }, 2000);
-        }
+    <div class="btn-group">
+        <button id="selectBtn" class="btn" onclick="submitPowers('whatsapp')">Via WhatsApp</button>
+        <button id="smsBtn" class="btn sms-btn" onclick="submitPowers('sms')">Via Fallback SMS</button>
+    </div>
+</div>
 
-        function prepareSelection() {
-            document.getElementById('status').innerText = "CHOOSE 2 TO KEEP. The 3rd is locked.";
-            document.getElementById('wheel3').classList.add('locked');
-            document.getElementById('wheel3').onclick = null; // Ensure 3 is unclickable
-            
-            // Activate wheels 1 and 2
-            [1, 2].forEach(id => {
-                const el = document.getElementById(`wheel${id}`);
-                el.style.cursor = "pointer";
-                el.onclick = () => toggleChoice(id);
-            });
-        }
+<script>
+    const TARGET_PHONE = "+2349132857091"; 
+    let selectedPowers = [];
 
-        function toggleChoice(id) {
-            const el = document.getElementById(`wheel${id}`);
-            const index = id - 1;
-            if (chosenIndices.includes(index)) {
-                chosenIndices = chosenIndices.filter(i => i !== index);
-                el.classList.remove('selected');
-            } else if (chosenIndices.length < 2) {
-                chosenIndices.push(index);
-                el.classList.add('selected');
+    // System dynamic injection of 251 extra unique sequential numbered powers 
+    const prefixes = ["Hyper", "Quantum", "Cyber", "Bio", "Plasma", "Aether", "Cosmic", "Nano", "Psycho", "Abyssal", "Solar", "Lunar", "Chrono", "Void"];
+    const cores = ["Engine", "Blaster", "Shield", "Pulse", "Striker", "Wave", "Catalyst", "Matrix", "Grip", "Nova", "Weaver", "Shifter", "Burst", "Spike"];
+    const rarities = ["common", "rare", "epic", "legendary"];
+
+    const grid = document.getElementById('powersGrid');
+    
+    for(let i = 1; i <= 251; i++) {
+        let pref = prefixes[i % prefixes.length];
+        let core = cores[i % cores.length];
+        let pName = `${pref} ${core} v-${100 + i}`;
+        let rarity = rarities[i % rarities.length];
+        
+        let powerDiv = document.createElement('div');
+        powerDiv.className = 'wheel';
+        powerDiv.setAttribute('data-name', pName.toLowerCase());
+        powerDiv.onclick = function() { togglePower(this, pName); };
+        
+        powerDiv.innerHTML = `
+            <div class="power-name">${pName}</div>
+            <div class="power-desc">Experimental baseline modification path code assignment tier #${4000 + i}.</div>
+            <div class="rarity ${rarity}">${rarity.charAt(0).toUpperCase() + rarity.slice(1)}</div>
+        `;
+        grid.appendChild(powerDiv);
+    }
+
+    function filterPowers() {
+        const query = document.getElementById('searchBar').value.toLowerCase();
+        const items = document.querySelectorAll('.wheel');
+        items.forEach(item => {
+            const name = item.getAttribute('data-name') || '';
+            if(name.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
             }
-            document.getElementById('submit-btn').style.display = (chosenIndices.length === 2) ? 'inline-block' : 'none';
+        });
+    }
+
+    function togglePower(element, powerName) {
+        if (element.classList.contains('locked')) return;
+
+        if (element.classList.contains('selected')) {
+            element.classList.remove('selected');
+            selectedPowers = selectedPowers.filter(p => p !== powerName);
+        } else {
+            if (selectedPowers.length >= 3) {
+                alert("You can only choose 3 powers!");
+                return;
+            }
+            element.classList.add('selected');
+            selectedPowers.push(powerName);
+        }
+        updateButtonState();
+    }
+
+    function updateButtonState() {
+        const btnW = document.getElementById('selectBtn');
+        const btnS = document.getElementById('smsBtn');
+        const status = document.getElementById('status');
+        
+        if (selectedPowers.length === 3) {
+            btnW.classList.add('active');
+            btnS.classList.add('active');
+            status.textContent = "Choices locked! Select your transmit transmission pathway.";
+            status.style.color = "var(--accent)";
+        } else {
+            btnW.classList.remove('active');
+            btnS.classList.remove('active');
+            status.textContent = `Selected ${selectedPowers.length} / 3 powers`;
+            status.style.color = "#fff";
+        }
+    }
+
+    function submitPowers(method) {
+        if (selectedPowers.length !== 3) return;
+        
+        const finalPowerCode = Math.floor(100000 + Math.random() * 900000);
+        const messageText = `⚡ POWER AWAKENING SYSTEM ⚡\n\n🔑 Code: ${finalPowerCode}\n\nSelected Powers:\n1. 🔹 ${selectedPowers[0]}\n2. 🔹 ${selectedPowers[1]}\n3. 🔹 ${selectedPowers[2]}`;
+        
+        if(method === 'whatsapp') {
+            const cleanPhone = TARGET_PHONE.replace('+', '');
+            window.open(`wa.me{cleanPhone}?text=${encodeURIComponent(messageText)}`, '_blank');
+        } else if(method === 'sms') {
+            // Evaluates device user agent variables for native SMS target strings
+            const smsScheme = /iPad|iPhone|iPod/.test(navigator.userAgent) ? 'sms:' : 'sms:';
+            window.open(`${smsScheme}${TARGET_PHONE}?body=${encodeURIComponent(messageText)}`, '_blank');
         }
 
-        async function submitToAdmin() {
-            const btn = document.getElementById('submit-btn');
-            btn.innerText = "Transmitting...";
-            btn.disabled = true;
-            try {
-                const response = await fetch('https://formspree.io', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        Chosen: chosenIndices.map(i => results[i]).join(", "),
-                        Locked: results[2]
-                    })
-                });
-                if (response.ok) {
-                    localStorage.setItem('powers_claimed_v2', 'true');
-                    alert("Powers Locked. Goodbye.");
-                    window.location.href = "https://google.com";
-                } else { alert("Submission error. Try again."); btn.disabled = false; }
-            } catch (err) { alert("Network Error."); btn.disabled = false; }
-        }
-    </script>
+        document.querySelector('.container').innerHTML = `
+            <h1>Awakening Dispatched</h1>
+            <div id="status" style="color: var(--accent);">Data sent via chosen path channel node.</div>
+            <p style="font-size: 1.5rem; margin-top: 40px;">Transmission Code:</p>
+            <div style="font-size: 3.5rem; font-weight: 900; color: #fff; letter-spacing: 5px; margin: 20px 0;">
+                ${finalPowerCode}
+            </div>
+            <p style="color: #666;">Profile initiation cycle is actively running.</p>
+        `;
+    }
+</script>
 </body>
 </html>
