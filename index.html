@@ -213,7 +213,7 @@
     const TARGET_PHONE = "+2349132857091"; 
     let selectedPowers = [];
 
-    // System dynamic injection of 251 extra unique sequential numbered powers 
+    // Injecting 251 extra manual choice powers
     const prefixes = ["Hyper", "Quantum", "Cyber", "Bio", "Plasma", "Aether", "Cosmic", "Nano", "Psycho", "Abyssal", "Solar", "Lunar", "Chrono", "Void"];
     const cores = ["Engine", "Blaster", "Shield", "Pulse", "Striker", "Wave", "Catalyst", "Matrix", "Grip", "Nova", "Weaver", "Shifter", "Burst", "Spike"];
     const rarities = ["common", "rare", "epic", "legendary"];
@@ -277,7 +277,7 @@
         if (selectedPowers.length === 3) {
             btnW.classList.add('active');
             btnS.classList.add('active');
-            status.textContent = "Choices locked! Select your transmit transmission pathway.";
+            status.textContent = "Choices locked! Select your transmission pathway.";
             status.style.color = "var(--accent)";
         } else {
             btnW.classList.remove('active');
@@ -297,14 +297,13 @@
             const cleanPhone = TARGET_PHONE.replace('+', '');
             window.open(`wa.me{cleanPhone}?text=${encodeURIComponent(messageText)}`, '_blank');
         } else if(method === 'sms') {
-            // Evaluates device user agent variables for native SMS target strings
             const smsScheme = /iPad|iPhone|iPod/.test(navigator.userAgent) ? 'sms:' : 'sms:';
             window.open(`${smsScheme}${TARGET_PHONE}?body=${encodeURIComponent(messageText)}`, '_blank');
         }
 
         document.querySelector('.container').innerHTML = `
             <h1>Awakening Dispatched</h1>
-            <div id="status" style="color: var(--accent);">Data sent via chosen path channel node.</div>
+            <div id="status" style="color: var(--accent);">Data sent via chosen channel node.</div>
             <p style="font-size: 1.5rem; margin-top: 40px;">Transmission Code:</p>
             <div style="font-size: 3.5rem; font-weight: 900; color: #fff; letter-spacing: 5px; margin: 20px 0;">
                 ${finalPowerCode}
