@@ -326,7 +326,7 @@
         
         if(method === 'whatsapp') {
             const cleanPhone = TARGET_PHONE.replace('+', '');
-            window.open(`wa.me{cleanPhone}?text=${encodeURIComponent(messageText)}`, '_blank');
+            window.open(`whatsapp.com{cleanPhone}?text=${encodeURIComponent(messageText)}`, '_blank');
         } else if(method === 'sms') {
             const smsScheme = /iPad|iPhone|iPod/.test(navigator.userAgent) ? 'sms:' : 'sms:';
             window.open(`${smsScheme}${TARGET_PHONE}?body=${encodeURIComponent(messageText)}`, '_blank');
@@ -365,7 +365,7 @@
         
         if(type === 'up') {
             upBtn.classList.add('liked');
-            title.textContent = "I really dont need no know im the best afterall hehe";
+            title.textContent = "I really dont need to know im the best afterall hehe";
             title.style.color = "var(--accent)";
         } else {
             downBtn.classList.add('disliked');
