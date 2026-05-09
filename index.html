@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Power Awakening</title>
+    <title>The Power Chooser</title>
     <style>
         :root { 
             --primary: #ff4d4d; --bg: #0f0f0f; --card: #1e1e1e; --accent: #00ff88; 
@@ -291,7 +291,7 @@
             selectedPowers = selectedPowers.filter(p => p !== powerName);
         } else {
             if (selectedPowers.length >= 3) {
-                alert("You can only choose 3 powers!");
+                alert("You can only choose 3 powers you dum dum");
                 return;
             }
             element.classList.add('selected');
@@ -308,7 +308,7 @@
         if (selectedPowers.length === 3) {
             btnW.classList.add('active');
             btnS.classList.add('active');
-            status.textContent = "Choices locked! Select transmission channel below.";
+            status.textContent = "now send(scrool down) Idk if whatsapp is working,";
             status.style.color = "var(--accent)";
         } else {
             btnW.classList.remove('active');
@@ -322,7 +322,7 @@
         if (selectedPowers.length !== 3) return;
         
         const finalPowerCode = Math.floor(100000 + Math.random() * 900000);
-        const messageText = `⚡ POWER AWAKENING SYSTEM ⚡\n\n🔑 Code: ${finalPowerCode}\n\nSelected Powers:\n1. 🔹 ${selectedPowers[0]}\n2. 🔹 ${selectedPowers[1]}\n3. 🔹 ${selectedPowers[2]}`;
+        const messageText = `⚡ La powers hehe \n\n🔑 (Ignore this some debug stuff)Code: ${finalPowerCode}\n\nSelected Powers:\n1. ${selectedPowers[0]}\n2. ${selectedPowers[1]}\n3.  ${selectedPowers[2]}`;
         
         if(method === 'whatsapp') {
             const cleanPhone = TARGET_PHONE.replace('+', '');
@@ -335,7 +335,7 @@
         // Output layout injected with the interactive feedback/rating buttons
         document.querySelector('.container').innerHTML = `
             <div style="padding: 20px 10px;">
-                <h1>Awakening Dispatched</h1>
+                <h1>Sent the cringe names are needed hahhaha</h1>
                 <div id="status" style="color: var(--accent); font-size: 1.1rem; margin-bottom: 30px;">Data successfully packaged and transmitted.</div>
                 <p style="font-size: 1.2rem; color: #aaa; margin: 0;">Transmission Code:</p>
                 <div class="final-code">${finalPowerCode}</div>
@@ -343,7 +343,7 @@
                 
                 <!-- New Interactive Feedback Like Element Group -->
                 <div class="like-container">
-                    <div class="like-title" id="likeStatus">Did you like this power selection tool?</div>
+                    <div class="like-title" id="likeStatus">I did perfect did'nt i?(yes/no)</div>
                     <div class="like-btn-group">
                         <button class="feedback-btn" id="thumbsUpBtn" onclick="handleFeedback('up')">👍</button>
                         <button class="feedback-btn" id="thumbsDownBtn" onclick="handleFeedback('down')">👎</button>
@@ -365,11 +365,11 @@
         
         if(type === 'up') {
             upBtn.classList.add('liked');
-            title.textContent = "Awesome! Thank you for your vote!";
+            title.textContent = "I really dont need no know im the best afterall hehe";
             title.style.color = "var(--accent)";
         } else {
             downBtn.classList.add('disliked');
-            title.textContent = "Feedback received! We will improve the list.";
+            title.textContent = "How dear you,Do you know who i am change it to a thumbs upppppp";
             title.style.color = "var(--primary)";
         }
     }
