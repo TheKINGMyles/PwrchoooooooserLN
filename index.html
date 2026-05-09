@@ -2,55 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Power Awakening</title>
     <style>
         :root { 
             --primary: #ff4d4d; --bg: #0f0f0f; --card: #1e1e1e; --accent: #00ff88; 
             --common: #b3b3b3; --rare: #0070dd; --epic: #a335ee; --legendary: #ff8000; --secret: #ff007f;
         }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; padding: 40px 20px; }
-        .container { max-width: 1200px; margin: auto; }
         
-        .header-controls { position: sticky; top: 0; background: rgba(15,15,15,0.95); padding: 15px; z-index: 100; border-radius: 8px; backdrop-filter: blur(5px); box-shadow: 0 4px 20px rgba(0,0,0,0.5); margin-bottom: 20px; }
-        #status { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; color: #fff; }
+        /* Mobile-friendly baseline scroll and safety rules */
+        body { 
+            font-family: 'Inter', sans-serif; background: var(--bg); color: white; text-align: center; margin: 0; 
+            padding: 10px 10px 40px 10px; box-sizing: border-box; -webkit-tap-highlight-color: transparent; 
+        }
+        .container { max-width: 1200px; margin: auto; padding-bottom: env(safe-area-inset-bottom); }
         
-        #searchBar { width: 100%; max-width: 400px; padding: 12px 20px; background: #222; border: 2px solid #444; border-radius: 25px; color: white; font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; }
+        h1 { font-size: 1.8rem; margin: 15px 0 10px 0; }
+
+        /* Sticky header built specifically for scrolling lists on smartphones */
+        .header-controls { 
+            position: sticky; top: 0; background: rgba(15,15,15,0.95); padding: 12px 10px; z-index: 100; 
+            border-radius: 12px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 4px 25px rgba(0,0,0,0.6); margin-bottom: 15px; 
+        }
+        #status { font-weight: bold; font-size: 0.95rem; margin-bottom: 12px; color: #fff; line-height: 1.3; }
+        
+        /* Larger touch target input */
+        #searchBar { 
+            width: 100%; max-width: 400px; padding: 14px 20px; background: #222; border: 2px solid #444; 
+            border-radius: 30px; color: white; font-size: 1rem; outline: none; transition: 0.3s; box-sizing: border-box; 
+        }
         #searchBar:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
 
-        .wheel-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin: 20px 0; }
-        
-        .wheel {
-            height: 210px; background: var(--card); border: 3px solid #333;
-            border-radius: 12px; display: flex; flex-direction: column; align-items: center; 
-            justify-content: space-between; font-weight: 800; cursor: pointer; transition: all 0.2s;
-            padding: 15px; font-size: 0.85rem; text-transform: uppercase; box-sizing: border-box;
+        /* Highly responsive fluid grid matching device profile widths perfectly */
+        .wheel-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); 
+            gap: 10px; 
+            margin: 15px 0; 
         }
-        .wheel:hover:not(.locked) { border-color: #666; transform: translateY(-3px); }
-        .wheel.selected { border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); background: #143326; }
-        .wheel.locked { opacity: 0.25; cursor: not-allowed; border-color: #444; filter: grayscale(1); pointer-events: none; }
+        
+        /* Touch cards adapted to prevent text overflow on compact views */
+        .wheel {
+            height: 185px; background: var(--card); border: 2px solid #333;
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center; 
+            justify-content: space-between; font-weight: 800; cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+            padding: 12px; font-size: 0.75rem; text-transform: uppercase; box-sizing: border-box;
+            user-select: none; -webkit-user-select: none;
+        }
+        /* Mobile friendly active state feedback over heavy hover styles */
+        .wheel:active:not(.locked) { transform: scale(0.97); }
+        .wheel.selected { border-color: var(--accent); box-shadow: 0 0 15px rgba(0, 255, 136, 0.3); background: #122b20; }
+        .wheel.locked { opacity: 0.2; cursor: not-allowed; border-color: #444; filter: grayscale(1); pointer-events: none; }
 
-        .power-name { font-size: 0.85rem; margin-bottom: 5px; color: #fff; width: 100%; word-wrap: break-word; }
-        .power-desc { font-size: 0.65rem; color: #aaa; text-transform: none; font-weight: 400; text-align: center; flex-grow: 1; margin-top: 5px; overflow: hidden; }
-        .locked-tag { color: var(--primary); font-size: 0.65rem; font-weight: bold; }
+        .power-name { font-size: 0.78rem; margin-bottom: 3px; color: #fff; width: 100%; word-wrap: break-word; line-height: 1.2; }
+        .power-desc { font-size: 0.6rem; color: #aaa; text-transform: none; font-weight: 400; text-align: center; flex-grow: 1; margin-top: 4px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+        .locked-tag { color: var(--primary); font-size: 0.6rem; font-weight: bold; margin-top: auto; }
 
-        .rarity { font-size: 0.6rem; padding: 2px 8px; border-radius: 4px; margin-top: 10px; letter-spacing: 1px; width: fit-content; }
+        .rarity { font-size: 0.55rem; padding: 2px 6px; border-radius: 4px; margin-top: 6px; letter-spacing: 0.5px; width: fit-content; }
         .common { color: var(--common); border: 1px solid var(--common); }
         .rare { color: var(--rare); border: 1px solid var(--rare); }
         .epic { color: var(--epic); border: 1px solid var(--epic); }
         .legendary { color: var(--legendary); border: 1px solid var(--legendary); }
         .secret { color: var(--secret); border: 1px solid var(--secret); animation: pulse 1.5s infinite; }
 
-        .btn-group { display: flex; justify-content: center; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        /* Flexible bottom stacked button layout for effortless thumb access */
+        .btn-group { display: flex; flex-direction: column; width: 100%; max-width: 400px; margin: 25px auto 0 auto; gap: 12px; padding: 0 10px; box-sizing: border-box; }
         .btn {
-            background: var(--accent); color: #000; border: none; padding: 15px 40px;
-            border-radius: 50px; font-weight: bold; cursor: pointer; display: inline-block;
-            font-size: 1.1rem; text-transform: uppercase; transition: all 0.2s; opacity: 0.3; pointer-events: none;
+            width: 100%; background: var(--accent); color: #000; border: none; padding: 16px 20px;
+            border-radius: 30px; font-weight: bold; cursor: pointer; display: inline-block;
+            font-size: 1rem; text-transform: uppercase; transition: all 0.2s; opacity: 0.25; pointer-events: none;
+            box-sizing: border-box;
         }
         .btn.sms-btn { background: #0088cc; color: white; }
-        .btn.active { opacity: 1; pointer-events: auto; box-shadow: 0 0 20px rgba(0, 255, 136, 0.4); }
-        .btn.sms-btn.active { box-shadow: 0 0 20px rgba(0, 136, 204, 0.4); }
+        .btn.active { opacity: 1; pointer-events: auto; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3); }
+        .btn.sms-btn.active { box-shadow: 0 4px 15px rgba(0, 136, 204, 0.3); }
         
+        /* Mobile completion screen responsive text adjustments */
+        .final-code { font-size: 2.8rem; font-weight: 900; color: #fff; letter-spacing: 4px; margin: 15px 0; word-break: break-all; }
+
         @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
     </style>
 </head>
@@ -65,7 +95,7 @@
     </div>
 
     <div class="wheel-container" id="powersGrid">
-        <!-- Initial Base Powers -->
+        <!-- Base Manual Choice Selection Powers -->
         <div class="wheel" data-name="super strength" onclick="togglePower(this, 'Super Strength')">
             <div class="power-name">Super Strength</div><div class="power-desc">Physical power capable of shattering boulders easily.</div><div class="rarity common">Common</div>
         </div>
@@ -128,7 +158,7 @@
             <div class="power-name">Mind Link</div><div class="power-desc">Establish silent mental communication channels with allies.</div><div class="rarity rare">Rare</div>
         </div>
 
-        <!-- LOCKED SCROLL WHEEL -->
+        <!-- LOCKED SCROLL WHEEL MODULE -->
         <div class="wheel locked" data-name="scroll wheel">
             <div class="power-name">Scroll Wheel</div><div class="power-desc">???</div><div class="rarity secret">???</div><div class="locked-tag">Taken by Myles</div>
         </div>
@@ -277,7 +307,7 @@
         if (selectedPowers.length === 3) {
             btnW.classList.add('active');
             btnS.classList.add('active');
-            status.textContent = "Choices locked! Select your transmission pathway.";
+            status.textContent = "Choices locked! Select transmission channel below.";
             status.style.color = "var(--accent)";
         } else {
             btnW.classList.remove('active');
@@ -301,15 +331,17 @@
             window.open(`${smsScheme}${TARGET_PHONE}?body=${encodeURIComponent(messageText)}`, '_blank');
         }
 
+        // Display updated final view optimized for touch layouts
         document.querySelector('.container').innerHTML = `
-            <h1>Awakening Dispatched</h1>
-            <div id="status" style="color: var(--accent);">Data sent via chosen channel node.</div>
-            <p style="font-size: 1.5rem; margin-top: 40px;">Transmission Code:</p>
-            <div style="font-size: 3.5rem; font-weight: 900; color: #fff; letter-spacing: 5px; margin: 20px 0;">
-                ${finalPowerCode}
+            <div style="padding: 20px 10px;">
+                <h1>Awakening Dispatched</h1>
+                <div id="status" style="color: var(--accent); font-size: 1.1rem; margin-bottom: 30px;">Data successfully packaged and transmitted.</div>
+                <p style="font-size: 1.2rem; color: #aaa; margin: 0;">Transmission Code:</p>
+                <div class="final-code">${finalPowerCode}</div>
+                <p style="color: #666; font-size: 0.9rem; line-height: 1.4; max-width: 320px; margin: auto;">Your profile initialization cycle is running in the background. You can safely close this page.</p>
             </div>
-            <p style="color: #666;">Profile initiation cycle is actively running.</p>
         `;
+        window.scrollTo(0, 0);
     }
 </script>
 </body>
